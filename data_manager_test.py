@@ -9,6 +9,7 @@ import unittest
 
 from data_manager import DataManager
 
+
 class DataManagerTest(unittest.TestCase):
     def setUp(self):
         self.data_manager = DataManager()
