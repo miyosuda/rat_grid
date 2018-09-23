@@ -51,3 +51,31 @@ class DataManager(object):
             pos = (self.pos_xs[i], self.pos_zs[i])
             self.place_outputs[i,:] = place_cells.get_activation(pos)
             self.hd_outputs[i,:]    = hd_cells.get_activation(self.angles[i])
+
+
+    def get_train_batch(self, batch_size, sequence_length):
+        episode_size = (self.linear_velocities.shape[0]+1) // EPISODE_LENGTH
+
+        inputs_batch        = np.empty([batch_size,
+                                        sequence_length,
+                                        self.inputs.shape[1]])
+        place_outputs_batch = np.empty([batch_size,
+                                        sequence_length,
+                                        self.place_outputs.shape[1]])
+        hd_outputs_batch    = np.empty([batch_size,
+                                        sequence_length,
+                                        self.hd_outputs.shape[1]])
+        
+        for i in range(batch_size):
+            episode_index = np.random.randint(0, episode_size)
+            pos_in_episode = np.random.randint(0, episode_size-(sequence_length+1))
+            if episode_index == episode_size-1 and \
+               pos_in_episode == episode_size-(sequence_length+1)-1:
+                # The last espide 1 step shorter than others
+                pos_in_episode -= 1
+            pos = episode_index * EPISODE_LENGTH + pos_in_episode
+            inputs_batch[i,:,:]        = self.inputs[pos:pos+sequence_length,:]
+            place_outputs_batch[i,:,:] = self.place_outputs[pos:pos+sequence_length,:]
+            hd_outputs_batch[i,:,:]    = self.hd_outputs[pos:pos+sequence_length,:]
+
+        return inputs_batch, place_outputs_batch, hd_outputs_batch

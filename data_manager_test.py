@@ -24,7 +24,7 @@ class DataManagerTest(unittest.TestCase):
         # Angle range is -pi ~ pi
         self.assertLessEqual(   np.max(self.data_manager.angles),  np.pi)
         self.assertGreaterEqual(np.min(self.data_manager.angles), -np.pi)
-        
+
     def test_data_shape(self):
         # Check data shape
         self.assertEqual(self.data_manager.linear_velocities.shape,  (49999,))
@@ -47,6 +47,22 @@ class DataManagerTest(unittest.TestCase):
         # Check outputs shape
         self.assertEqual(self.data_manager.place_outputs.shape, (49999,256))
         self.assertEqual(self.data_manager.hd_outputs.shape,    (49999,12))
+
+    def test_prepare(self):
+        np.random.seed(1)
+        place_cells = PlaceCells()
+        hd_cells = HDCells()
+
+        self.data_manager.prepare(place_cells, hd_cells)
+
+        batch_size = 10
+        sequence_length = 100
+        out = self.data_manager.get_train_batch(batch_size, sequence_length)
+        inputs_batch, place_outputs_batch, hd_outputs_batch = out
+
+        self.assertEqual(inputs_batch.shape,        (batch_size, sequence_length, 3))
+        self.assertEqual(place_outputs_batch.shape, (batch_size, sequence_length, 256))
+        self.assertEqual(hd_outputs_batch.shape,    (batch_size, sequence_length, 12))
         
         
 if __name__ == '__main__':

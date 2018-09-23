@@ -45,7 +45,7 @@ class Model(object):
                                                       dtype=tf.float32,
                                                       time_major=False)
             
-            # rnn_output=(?,sequence_length,128), rnn_state=((?,128), (?,128))
+            # rnn_output=(-1,sequence_length,128), rnn_state=((-1,128), (-1,128))
             rnn_output = tf.reshape(rnn_output, shape=[-1, 128])
             
             self.g = tf.layers.dense(rnn_output, 512) # TODO: activation here?
