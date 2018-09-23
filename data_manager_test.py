@@ -58,11 +58,15 @@ class DataManagerTest(unittest.TestCase):
         batch_size = 10
         sequence_length = 100
         out = self.data_manager.get_train_batch(batch_size, sequence_length)
-        inputs_batch, place_outputs_batch, hd_outputs_batch = out
+        inputs_batch, place_outputs_batch, hd_outputs_batch, place_init_batch, hd_init_batch = \
+            out
 
         self.assertEqual(inputs_batch.shape,        (batch_size, sequence_length, 3))
         self.assertEqual(place_outputs_batch.shape, (batch_size, sequence_length, 256))
         self.assertEqual(hd_outputs_batch.shape,    (batch_size, sequence_length, 12))
+        
+        self.assertEqual(place_init_batch.shape,    (batch_size, 256))
+        self.assertEqual(hd_init_batch.shape,       (batch_size, 12))
         
         
 if __name__ == '__main__':

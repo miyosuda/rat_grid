@@ -65,6 +65,11 @@ class DataManager(object):
         hd_outputs_batch    = np.empty([batch_size,
                                         sequence_length,
                                         self.hd_outputs.shape[1]])
+
+        place_init_batch = np.empty([batch_size,
+                                     self.place_outputs.shape[1]])
+        hd_init_batch    = np.empty([batch_size,
+                                     self.hd_outputs.shape[1]])
         
         for i in range(batch_size):
             episode_index = np.random.randint(0, episode_size)
@@ -75,7 +80,11 @@ class DataManager(object):
                 pos_in_episode -= 1
             pos = episode_index * EPISODE_LENGTH + pos_in_episode
             inputs_batch[i,:,:]        = self.inputs[pos:pos+sequence_length,:]
-            place_outputs_batch[i,:,:] = self.place_outputs[pos:pos+sequence_length,:]
-            hd_outputs_batch[i,:,:]    = self.hd_outputs[pos:pos+sequence_length,:]
+            place_outputs_batch[i,:,:] = self.place_outputs[pos+1:pos+sequence_length+1,:]
+            hd_outputs_batch[i,:,:]    = self.hd_outputs[pos+1:pos+sequence_length+1,:]
+            
+            place_init_batch[i,:]   = self.place_outputs[pos,:]
+            hd_init_batch[i,:]      = self.hd_outputs[pos,:]
 
-        return inputs_batch, place_outputs_batch, hd_outputs_batch
+        return inputs_batch, place_outputs_batch, hd_outputs_batch, \
+            place_init_batch, hd_init_batch
