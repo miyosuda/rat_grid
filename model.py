@@ -66,3 +66,5 @@ class Model(object):
             self.hd_loss = tf.reduce_mean(
                 tf.nn.softmax_cross_entropy_with_logits(labels=hd_outputs_reshaped,
                                                         logits=hd_logits))
+
+            self.total_loss = self.place_loss + self.hd_loss
