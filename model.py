@@ -59,12 +59,10 @@ class Model(object):
                                                 shape=[-1, place_cell_size])
             hd_outputs_reshaped = tf.reshape(self.hd_outputs,
                                              shape=[-1, hd_cell_size])
-            
+
             self.place_loss = tf.reduce_mean(
                 tf.nn.softmax_cross_entropy_with_logits(labels=place_outputs_reshaped,
                                                         logits=place_logits))
             self.hd_loss = tf.reduce_mean(
                 tf.nn.softmax_cross_entropy_with_logits(labels=hd_outputs_reshaped,
                                                         logits=hd_logits))
-
-            self.total_loss = self.place_loss + self.hd_loss

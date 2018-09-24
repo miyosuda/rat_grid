@@ -21,8 +21,8 @@ def get_options():
     tf.app.flags.DEFINE_integer("steps", 300000, "training steps")
     tf.app.flags.DEFINE_integer("save_interval", 5000, "saving interval")
     tf.app.flags.DEFINE_float("learning_rate", 1e-5, "learning rate")
-    tf.app.flags.DEFINE_float("momemtum", 0.9, "momemtum")
-    tf.app.flags.DEFINE_float("weight_decay", 1e-5, "weight decay")
+    tf.app.flags.DEFINE_float("momentum", 0.9, "momentum")
+    tf.app.flags.DEFINE_float("l2_reg", 1e-5, "weight decay")
     tf.app.flags.DEFINE_float("gradient_clipping", 1e-5, "gradient clipping")
     return tf.app.flags.FLAGS
 
@@ -57,12 +57,12 @@ def save_checkponts(sess, saver, global_step):
 def train(sess, trainer, saver, summary_writer, start_step):
     for i in range(start_step, flags.steps):
         # 学習
-        trainer.train(sess, summary_writer, step=i)
+        trainer.train(sess, summary_writer, step=i, flags=flags)
         
         if i % flags.save_interval == flags.save_interval-1:
             # 保存
             save_checkponts(sess, saver, i)
-        
+
 
 def main(argv):
     np.random.seed(1)

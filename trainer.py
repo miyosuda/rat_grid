@@ -11,29 +11,55 @@ class Trainer(object):
     def __init__(self, data_manager, model, flags):
         self.data_manager = data_manager
         self.model = model
-        self.flags = flags
-
-        self._prepare_optimizer()
+        
+        self._prepare_optimizer(flags)
+        self._prepare_summary()
       
-    def _prepare_optimizer(self):
-        # TODO: RMSProp
-        self.train_op = tf.train.AdamOptimizer(self.flags.learning_rate).minimize(
-            self.model.total_loss)
-        # TODO: gradient clipping
-        # TODO: weight decay
+    def _prepare_optimizer(self, flags):
+        with tf.variable_scope("opt"):
+            vars = tf.trainable_variables()
+            l2_reg_loss = tf.add_n([ tf.nn.l2_loss(v) for v in vars
+                                     if 'bias' not in v.name ]) * flags.l2_reg
+        
+            optimizer = tf.train.RMSPropOptimizer(
+                learning_rate=flags.learning_rate,
+                momentum=flags.momentum
+            )
+            
+            total_loss = self.model.place_loss + \
+                         self.model.hd_loss + \
+                         l2_reg_loss
+        
+            gvs = optimizer.compute_gradients(total_loss)
+            gradient_clipping = flags.gradient_clipping
+        
+            clipped_gvs = [(tf.clip_by_value(grad,
+                                             -flags.gradient_clipping,
+                                             flags.gradient_clipping), var) \
+                           for grad, var in gvs]
+            self.train_op = optimizer.apply_gradients(clipped_gvs)
 
-    def train(self, sess, summary_writer, step):
-        out = self.data_manager.get_train_batch(self.flags.batch_size,
-                                                self.flags.sequence_length)
+    def _prepare_summary(self):
+        with tf.name_scope("logs"):
+            tf.summary.scalar("place_loss", self.model.place_loss)
+            tf.summary.scalar("hd_loss",    self.model.hd_loss)
+        self.summary_op = tf.summary.merge_all()
+
+    def train(self, sess, summary_writer, step, flags):
+        out = self.data_manager.get_train_batch(flags.batch_size,
+                                                flags.sequence_length)
         inputs_batch, place_outputs_batch, hd_outputs_batch, place_init_batch, hd_init_batch = \
             out
-        _, loss = sess.run([self.train_op, self.model.total_loss],
-                           feed_dict = {
-                               self.model.inputs : inputs_batch,
-                               self.model.place_outputs :place_outputs_batch, 
-                               self.model.hd_outputs : hd_outputs_batch, 
-                               self.model.place_init : place_init_batch,
-                               self.model.hd_init : hd_init_batch,
-                               self.model.keep_prob : 0.5
-                           })
-        print(loss)
+        _, summary_str = sess.run(
+            [self.train_op, self.summary_op],
+            feed_dict = {
+                self.model.inputs        : inputs_batch,
+                self.model.place_outputs : place_outputs_batch, 
+                self.model.hd_outputs    : hd_outputs_batch, 
+                self.model.place_init    : place_init_batch,
+                self.model.hd_init       : hd_init_batch,
+                self.model.keep_prob     : 0.5
+            })
+        
+        if step % 10 == 0:
+            summary_writer.add_summary(summary_str, step)
