@@ -118,7 +118,8 @@ class DataManager(object):
             pos = episode_index * EPISODE_LENGTH + pos_in_episode
             inputs_batch[i,:,:]        = self.inputs[pos:pos+sequence_length,:]
             place_init_batch[i,:]      = self.place_outputs[pos,:]
-            hd_init_batch[i,:]         = self.hd_outputs[pos,:]            
+            hd_init_batch[i,:]         = self.hd_outputs[pos,:]
+            # TODO: これだと最後がずれているからNG
             place_pos_batch[i,:,0]     = self.pos_xs[pos+1:pos+sequence_length+1]
             place_pos_batch[i,:,1]     = self.pos_zs[pos+1:pos+sequence_length+1]
             sequence_index += 1
