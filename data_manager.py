@@ -114,7 +114,7 @@ class DataManager(object):
         
         for i in range(batch_size):
             episode_index = sequence_index // sequence_per_episode
-            pos_in_episode = (sequence_per_episode % sequence_per_episode) * sequence_length
+            pos_in_episode = (sequence_index % sequence_per_episode) * sequence_length
             pos = episode_index * EPISODE_LENGTH + pos_in_episode
             inputs_batch[i,:,:]        = self.inputs[pos:pos+sequence_length,:]
             place_init_batch[i,:]      = self.place_outputs[pos,:]
