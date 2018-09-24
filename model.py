@@ -29,11 +29,12 @@ class Model(object):
             
             cell = tf.nn.rnn_cell.BasicLSTMCell(128,
                                                 state_is_tuple=True)
-            
+
+            # TODO: no bias here?
             # init cell
             l0 = tf.layers.dense(self.place_init, 128) + \
                  tf.layers.dense(self.hd_init, 128)
-            # init hidden            
+            # init hidden
             m0 = tf.layers.dense(self.place_init, 128) + \
                  tf.layers.dense(self.hd_init, 128)
             
@@ -47,22 +48,23 @@ class Model(object):
             
             # rnn_output=(-1,sequence_length,128), rnn_state=((-1,128), (-1,128))
             rnn_output = tf.reshape(rnn_output, shape=[-1, 128])
-            
-            self.g = tf.layers.dense(rnn_output, 512) # TODO: activation here?
-            
-            g_dropout = tf.nn.dropout(self.g, self.keep_prob)
-            
-            place_logits = tf.layers.dense(g_dropout, place_cell_size)
-            hd_logits    = tf.layers.dense(g_dropout, hd_cell_size)
 
-            place_outputs_reshaped = tf.reshape(self.place_outputs,
-                                                shape=[-1, place_cell_size])
-            hd_outputs_reshaped = tf.reshape(self.hd_outputs,
-                                             shape=[-1, hd_cell_size])
+            self.g = tf.layers.dense(rnn_output, 512)
 
-            self.place_loss = tf.reduce_mean(
-                tf.nn.softmax_cross_entropy_with_logits(labels=place_outputs_reshaped,
-                                                        logits=place_logits))
-            self.hd_loss = tf.reduce_mean(
-                tf.nn.softmax_cross_entropy_with_logits(labels=hd_outputs_reshaped,
-                                                        logits=hd_logits))
+            g_dropout = tf.nn.dropout(self.g, self.keep_prob)            
+            
+            with tf.variable_scope("outputs"):
+                place_logits = tf.layers.dense(g_dropout, place_cell_size)
+                hd_logits    = tf.layers.dense(g_dropout, hd_cell_size)
+                
+                place_outputs_reshaped = tf.reshape(self.place_outputs,
+                                                    shape=[-1, place_cell_size])
+                hd_outputs_reshaped = tf.reshape(self.hd_outputs,
+                                                 shape=[-1, hd_cell_size])
+
+                self.place_loss = tf.reduce_mean(
+                    tf.nn.softmax_cross_entropy_with_logits(labels=place_outputs_reshaped,
+                                                            logits=place_logits))
+                self.hd_loss = tf.reduce_mean(
+                    tf.nn.softmax_cross_entropy_with_logits(labels=hd_outputs_reshaped,
+                                                            logits=hd_logits))

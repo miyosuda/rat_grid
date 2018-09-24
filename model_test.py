@@ -17,6 +17,7 @@ class ModelTest(unittest.TestCase):
                       sequence_length=sequence_length)
         
         self.assertEqual(model.g.get_shape()[1], 512)
+        
 
 if __name__ == '__main__':
     unittest.main()

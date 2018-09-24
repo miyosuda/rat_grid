@@ -17,8 +17,9 @@ class Trainer(object):
       
     def _prepare_optimizer(self, flags):
         with tf.variable_scope("opt"):
-            vars = tf.trainable_variables()
-            l2_reg_loss = tf.add_n([ tf.nn.l2_loss(v) for v in vars
+            output_vars = tf.trainable_variables("model/outputs")
+            # Apply L2 regularization to output linear layers
+            l2_reg_loss = tf.add_n([ tf.nn.l2_loss(v) for v in output_vars
                                      if 'bias' not in v.name ]) * flags.l2_reg
         
             optimizer = tf.train.RMSPropOptimizer(
@@ -29,14 +30,20 @@ class Trainer(object):
             total_loss = self.model.place_loss + \
                          self.model.hd_loss + \
                          l2_reg_loss
-        
+
+            # Apply gradient clipping
             gvs = optimizer.compute_gradients(total_loss)
             gradient_clipping = flags.gradient_clipping
-        
-            clipped_gvs = [(tf.clip_by_value(grad,
-                                             -flags.gradient_clipping,
-                                             flags.gradient_clipping), var) \
-                           for grad, var in gvs]
+
+            clipped_gvs = []
+            for grad, var in gvs:
+                if "model/outputs" in var.name:
+                    gv = (tf.clip_by_value(grad,
+                                           -flags.gradient_clipping,
+                                           flags.gradient_clipping), var)
+                else:
+                    gv = (grad, var)
+                clipped_gvs.append(gv)
             self.train_op = optimizer.apply_gradients(clipped_gvs)
 
     def _prepare_summary(self):
