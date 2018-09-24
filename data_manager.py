@@ -88,3 +88,39 @@ class DataManager(object):
 
         return inputs_batch, place_outputs_batch, hd_outputs_batch, \
             place_init_batch, hd_init_batch
+
+    def get_confirm_index_size(self, batch_size, sequence_length):
+        # total episode size (=125)
+        episode_size = (self.linear_velocities.shape[0]+1) // EPISODE_LENGTH
+        # sequence size per one episode (=4)
+        sequence_per_episode = EPISODE_LENGTH // sequence_length
+        return (episode_size * sequence_per_episode // batch_size) - 1
+
+    def get_confirm_batch(self, batch_size, sequence_length, index):
+        episode_size = (self.linear_velocities.shape[0]+1) // EPISODE_LENGTH
+        
+        inputs_batch     = np.empty([batch_size,
+                                     sequence_length,
+                                     self.inputs.shape[1]])
+        place_init_batch = np.empty([batch_size,
+                                     self.place_outputs.shape[1]])
+        hd_init_batch    = np.empty([batch_size,
+                                     self.hd_outputs.shape[1]])
+        place_pos_batch  = np.empty([batch_size, sequence_length, 2])
+
+        sequence_per_episode = EPISODE_LENGTH // sequence_length
+
+        sequence_index = index * batch_size
+        
+        for i in range(batch_size):
+            episode_index = sequence_index // sequence_per_episode
+            pos_in_episode = (sequence_per_episode % sequence_per_episode) * sequence_length
+            pos = episode_index * EPISODE_LENGTH + pos_in_episode
+            inputs_batch[i,:,:]        = self.inputs[pos:pos+sequence_length,:]
+            place_init_batch[i,:]      = self.place_outputs[pos,:]
+            hd_init_batch[i,:]         = self.hd_outputs[pos,:]            
+            place_pos_batch[i,:,0]     = self.pos_xs[pos+1:pos+sequence_length+1]
+            place_pos_batch[i,:,1]     = self.pos_zs[pos+1:pos+sequence_length+1]
+            sequence_index += 1
+        
+        return inputs_batch, place_init_batch, hd_init_batch, place_pos_batch

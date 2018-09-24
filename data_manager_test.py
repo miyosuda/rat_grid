@@ -15,7 +15,7 @@ from place_cells import PlaceCells
 class DataManagerTest(unittest.TestCase):
     def setUp(self):
         self.data_manager = DataManager()
-    
+
     def test_value_range(self):
         # Pos range is -4.5 ~ 4.5 (実際は-4.03~4.03あたり)
         self.assertLessEqual(   np.max(self.data_manager.pos_xs),  4.5)
@@ -48,7 +48,7 @@ class DataManagerTest(unittest.TestCase):
         self.assertEqual(self.data_manager.place_outputs.shape, (49999,256))
         self.assertEqual(self.data_manager.hd_outputs.shape,    (49999,12))
 
-    def test_prepare(self):
+    def test_get_train_batch(self):
         np.random.seed(1)
         place_cells = PlaceCells()
         hd_cells = HDCells()
@@ -67,6 +67,38 @@ class DataManagerTest(unittest.TestCase):
         
         self.assertEqual(place_init_batch.shape,    (batch_size, 256))
         self.assertEqual(hd_init_batch.shape,       (batch_size, 12))
+
+    def test_get_confirm_batch(self):
+        np.random.seed(1)
+        place_cells = PlaceCells()
+        hd_cells = HDCells()
+        
+        self.data_manager.prepare(place_cells, hd_cells)
+
+        batch_size = 10
+        sequence_length = 100
+
+        index_size = self.data_manager.get_confirm_index_size(batch_size, sequence_length)
+        # 49
+        self.assertEqual(index_size, (50000 // (sequence_length * batch_size)) - 1)
+
+        index = 0
+        out = self.data_manager.get_confirm_batch(batch_size, sequence_length, index)
+        inputs_batch, place_init_batch, hd_init_batch, place_pos_batch = out
+
+        self.assertEqual(inputs_batch.shape,        (batch_size, sequence_length, 3))
+        self.assertEqual(place_init_batch.shape,    (batch_size, 256))
+        self.assertEqual(hd_init_batch.shape,       (batch_size, 12))
+        self.assertEqual(place_pos_batch.shape,     (batch_size, sequence_length, 2))
+
+        index = index_size-1
+        out = self.data_manager.get_confirm_batch(batch_size, sequence_length, index)
+        inputs_batch, place_init_batch, hd_init_batch, place_pos_batch = out
+        
+        self.assertEqual(inputs_batch.shape,        (batch_size, sequence_length, 3))
+        self.assertEqual(place_init_batch.shape,    (batch_size, 256))
+        self.assertEqual(hd_init_batch.shape,       (batch_size, 12))
+        self.assertEqual(place_pos_batch.shape,     (batch_size, sequence_length, 2))
         
         
 if __name__ == '__main__':
