@@ -30,13 +30,12 @@ class Model(object):
             cell = tf.nn.rnn_cell.BasicLSTMCell(128,
                                                 state_is_tuple=True)
 
-            # TODO: no bias here?
             # init cell
-            l0 = tf.layers.dense(self.place_init, 128) + \
-                 tf.layers.dense(self.hd_init, 128)
+            l0 = tf.layers.dense(self.place_init, 128, use_bias=False) + \
+                 tf.layers.dense(self.hd_init, 128, use_bias=False)
             # init hidden
-            m0 = tf.layers.dense(self.place_init, 128) + \
-                 tf.layers.dense(self.hd_init, 128)
+            m0 = tf.layers.dense(self.place_init, 128, use_bias=False) + \
+                 tf.layers.dense(self.hd_init, 128, use_bias=False)
             
             initial_state = tf.nn.rnn_cell.LSTMStateTuple(l0, m0)
             
@@ -49,13 +48,13 @@ class Model(object):
             # rnn_output=(-1,sequence_length,128), rnn_state=((-1,128), (-1,128))
             rnn_output = tf.reshape(rnn_output, shape=[-1, 128])
 
-            self.g = tf.layers.dense(rnn_output, 512)
+            self.g = tf.layers.dense(rnn_output, 512, use_bias=False)
 
-            g_dropout = tf.nn.dropout(self.g, self.keep_prob)            
+            g_dropout = tf.nn.dropout(self.g, self.keep_prob)
             
             with tf.variable_scope("outputs"):
-                place_logits = tf.layers.dense(g_dropout, place_cell_size)
-                hd_logits    = tf.layers.dense(g_dropout, hd_cell_size)
+                place_logits = tf.layers.dense(g_dropout, place_cell_size, use_bias=False)
+                hd_logits    = tf.layers.dense(g_dropout, hd_cell_size, use_bias=False)
                 
                 place_outputs_reshaped = tf.reshape(self.place_outputs,
                                                     shape=[-1, place_cell_size])
