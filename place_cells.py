@@ -23,3 +23,7 @@ class PlaceCells(object):
         norm2 = np.linalg.norm(d, ord=2, axis=1)
         cs = np.exp( -norm2 / (2.0 * self.sigma_sq) )
         return cs / np.sum(cs)
+
+    def get_nearest_cell_pos(self, activation):
+        index = np.argmax(activation)
+        return self.us[index]

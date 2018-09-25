@@ -32,7 +32,14 @@ class PlaceCellsTest(unittest.TestCase):
 
         self.assertLessEqual(   np.max(c),  1.0)
         self.assertGreaterEqual(np.min(c),  0.0)
-
-
+        
+    def test_get_nearest_cell_pos(self):
+        pos = np.copy(self.place_cells.us[0])
+        c = self.place_cells.get_activation(pos)
+        nearest_cell_pos = self.place_cells.get_nearest_cell_pos(c)
+        
+        self.assertTrue(np.allclose(pos, nearest_cell_pos))
+        
+        
 if __name__ == '__main__':
     unittest.main()
